@@ -1,6 +1,12 @@
 package smpp
 
-import "net"
+import (
+	"net"
+	"gsmpp/gsmpp/smpp/pdu"
+	"time"
+	"fmt"
+	"strconv"
+)
 
 
 type Transceiver struct {
@@ -14,33 +20,43 @@ type Transceiver struct {
 	addrNpi byte
 	addressRange string
 	conn net.Conn
-	events chan Event
+
+	ChannelState chan Event
+	enquirelinkTicker *time.Ticker
 }
 
 func NewTransceiver(host string, port int, systemId string, password string, systemType string) *Transceiver {
-	return &Transceiver{host: host, port:port, systemId:systemId, password:password, systemType:systemType, interfaceVersion:34, events:make(chan Event, 1)}
+	return &Transceiver{
+		host:             host,
+		port:             port,
+		systemId:         systemId,
+		password:         password,
+		systemType:       systemType,
+		interfaceVersion: pdu.SmppInterfaceVersion,
+		ChannelState:     make(chan Event, 1),
+	}
 }
 
-func Bind(t *Transceiver) {
-	conn, err := net.Dial("tcp", "localhost:8075")
+func (t *Transceiver) Bind() {
+	conn, err := net.Dial("tcp", t.host + ":" + strconv.Itoa(t.port))
 	if err != nil {
-		t.events <- Event{Status:1, Message:err.Error()}
+		t.ChannelState <- NewEvent(CONN_FAIL, "connection failed")
 		return
 	}
 
-	t.conn = conn
-	//return Erro
+	_, err = conn.Write([]byte("bind"))
+	if err != nil {
+		t.ChannelState <- NewEvent(BIND, "binding event")
+		conn.Close()
+		return
+	}
+	t.enquirelinkTicker = time.NewTicker(time.Second * 2)
+	go t.sendEnquireLink()
+	t.ChannelState <- NewEvent(BIND, "bind event")
 }
 
-func Events(t *Transceiver) chan Event {
-	return t.events
+func (t *Transceiver) sendEnquireLink()  {
+	for item := range t.enquirelinkTicker.C {
+		fmt.Println(item)
+	}
 }
-
-func Unbind(){
-
-}
-
-/*
-func send(t *Transceiver) error {
-	t.conn.Write()
-}*/
