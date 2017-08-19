@@ -1,6 +1,6 @@
 package pdu
 
-type BindTransceiver struct {
+type BindTransceiverCommand struct {
 	Header
 	systemId string
 	password string
@@ -10,6 +10,8 @@ type BindTransceiver struct {
 	addrNpi byte
 	addressRange string
 }
+
+
 
 const (
 	BindRransceiverCommand uint32 = 0x00000009

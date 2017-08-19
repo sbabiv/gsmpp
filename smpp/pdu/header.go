@@ -28,18 +28,9 @@ func NewHeader(len uint32, id uint32, status uint32) *Header  {
 }
 
 func (h *Header)Bytes() []byte {
-	bs := make([]byte, 4)
-	var b bytes.Buffer
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, h)
 
-	binary.BigEndian.PutUint32(bs, h.length)
-	b.Write(bs)
-	binary.BigEndian.PutUint32(bs, h.id)
-	b.Write(bs)
-	binary.BigEndian.PutUint32(bs, h.status)
-	b.Write(bs)
-	binary.BigEndian.PutUint32(bs, h.sequence)
-	b.Write(bs)
-
-	return b.Bytes()
+	return buf.Bytes()
 }
 
