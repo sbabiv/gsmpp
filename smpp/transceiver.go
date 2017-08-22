@@ -43,7 +43,6 @@ func (t *Transceiver) Bind() {
 		t.ChannelState <- NewEvent(CONN_FAIL, "connection failed")
 		return
 	}
-
 	_, err = conn.Write([]byte("bind"))
 	if err != nil {
 		t.ChannelState <- NewEvent(BIND, "binding event")
