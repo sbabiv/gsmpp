@@ -48,15 +48,15 @@ func (c *BindTransceiverCommand) Bytes() []byte {
 	return b
 }
 
-type OptionalParameter struct {
+type TLV struct {
 	Tag    uint16
 	Length uint16
 	Value  []byte
 }
 
-func NewOptionalParameter(b []byte) *OptionalParameter {
+func NewTLV(b []byte) *TLV {
 	l := binary.BigEndian.Uint16(b[2:4])
-	return &OptionalParameter{
+	return &TLV{
 		Tag:    binary.BigEndian.Uint16(b[:2]),
 		Length: l,
 		Value:  b[4:l],

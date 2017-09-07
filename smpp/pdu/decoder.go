@@ -40,16 +40,45 @@ func Decode(b []byte) {
 		Sequence: binary.BigEndian.Uint32(b[12:16]),
 	}
 
-	n, systemId := decodeCoctet(b[16:], 16)
-	fmt.Printf("n: v%, systemid: v%", n, systemId)
 	fmt.Printf("len %v", h.Length)
+
+
+	resp := bindTransceiverRespDecoder(b)
+	fmt.Printf("system id: %v", resp.SystemId)
 }
 
-func decodeCoctet(b []byte, offset int) (int, string) {
+func coctedDecoder(b []byte, offset int) (int, string) {
 	for i, v := range b {
 		if v == 0 {
 			return offset + i + 1, string(b[:i+1])
 		}
 	}
 	return 0, ""
+}
+
+func bindTransceiverRespDecoder(b []byte) BIND_TRANSCEIVER_RESP {
+	n, systemId := coctedDecoder(b[16:], 16)
+
+	fmt.Printf("n: %v, systemid: %v", n, systemId)
+
+	p := make(OptionalParameters)
+	tlv := NewTLV(b[n:])
+	p[tlv.Tag] = tlv
+
+	btr := BIND_TRANSCEIVER_RESP{
+		systemId,
+		p,
+	}
+	return btr
+}
+
+type BIND_TRANSCEIVER_RESP struct {
+	SystemId string
+	OptionalParameters
+}
+
+type OptionalParameters map[uint16]*TLV
+
+type pduResp interface {
+	GetCommandId() uint32
 }
