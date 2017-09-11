@@ -2,18 +2,22 @@ package pdu
 
 import (
 	"bytes"
-	"encoding/binary"
+
 )
 
 const (
 	BindTransceiver uint32 = 0x00000009
 	BindTransceiverResp = 0x80000009
 	SmppInterfaceVersion byte = 0x34
+	enquire_link uint32 = 0x00000015
+	enquire_link_resp uint32 = 0x80000015
 
 	/*command id*/
 	ESME_ROK = 0x00000000
 
 	/*command status*/
+
+	/*tlv tag*/
 	SC_INTERFACE_VERSION = 0x0210
 )
 
@@ -48,20 +52,6 @@ func (c *BindTransceiverCommand) Bytes() []byte {
 	return b
 }
 
-type TLV struct {
-	Tag    uint16
-	Length uint16
-	Value  []byte
-}
-
-func NewTLV(b []byte) *TLV {
-	l := binary.BigEndian.Uint16(b[2:4])
-	return &TLV{
-		Tag:    binary.BigEndian.Uint16(b[:2]),
-		Length: l,
-		Value:  b[4:l],
-	}
-}
 
 
 /*type BindTransceiverResp struct {

@@ -40,3 +40,41 @@ func (h *Header)Bytes() []byte {
 	return buf.Bytes()
 }
 
+type EnquireLink struct {
+	Header
+}
+
+func NewEnquireLinkResp(sequence uint32) *EnquireLink {
+	return &EnquireLink{Header{
+		Length:   HeaderLength,
+		Id:       enquire_link_resp,
+		Status:   0,
+		Sequence: sequence},
+	}
+}
+
+func NewEnquireLink() *EnquireLink {
+	return &EnquireLink{Header{
+		Length:   HeaderLength,
+		Id:       enquire_link,
+		Status:   0,
+		Sequence: sequenceInc()},
+	}
+}
+
+func (e *EnquireLink)Bytes() []byte  {
+	return e.Header.Bytes()
+}
+
+type TLV struct {
+	Tag    uint16
+	Length uint16
+	Value  []byte
+}
+
+type OptionalParameters map[uint16]*TLV
+
+type BIND_TRANSCEIVER_RESP struct {
+	SystemId string
+	OptionalParameters
+}

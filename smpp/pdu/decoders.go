@@ -7,6 +7,28 @@ import (
 	"fmt"
 )
 
+func coctedDecoder(b []byte, offset int) (int, string) {
+	for i, v := range b {
+		if v == 0 {
+			return offset + i + 1, string(b[:i+1])
+		}
+	}
+	return 0, ""
+}
+
+func tlvDecoder(b []byte) (*TLV, error) {
+	l := binary.BigEndian.Uint16(b[2:4])
+	if len(b)-int(l) < 0 {
+		return nil, fmt.Errorf("TLV decoding error")
+	}
+
+	return &TLV{
+		Tag:    binary.BigEndian.Uint16(b[:2]),
+		Length: l,
+		Value:  b[4:4+l],
+	}, nil
+}
+
 func HeaderDecoder(c net.Conn) (*Header, error) {
 	b := make([]byte, HeaderLength)
 	n, err := c.Read(b)
@@ -25,13 +47,6 @@ func HeaderDecoder(c net.Conn) (*Header, error) {
 	}, nil
 }
 
-/*func Decode(c net.Conn) error {
-	h, err := HeaderDecoder(c)
-	if err != nil {
-		return err
-	}
-}*/
-
 func Decode(b []byte) {
 	h := &Header{
 		Length:   binary.BigEndian.Uint32(b[0:4]),
@@ -40,45 +55,27 @@ func Decode(b []byte) {
 		Sequence: binary.BigEndian.Uint32(b[12:16]),
 	}
 
-	fmt.Printf("len %v", h.Length)
-
-
-	resp := bindTransceiverRespDecoder(b)
-	fmt.Printf("system id: %v", resp.SystemId)
+	resp, _ := bindTransceiverRespDecoder(b)
+	fmt.Printf("system id: %v, h.len: %v", resp.SystemId, h.Length)
 }
 
-func coctedDecoder(b []byte, offset int) (int, string) {
-	for i, v := range b {
-		if v == 0 {
-			return offset + i + 1, string(b[:i+1])
-		}
-	}
-	return 0, ""
-}
-
-func bindTransceiverRespDecoder(b []byte) BIND_TRANSCEIVER_RESP {
+func bindTransceiverRespDecoder(b []byte) (*BIND_TRANSCEIVER_RESP, error) {
 	n, systemId := coctedDecoder(b[16:], 16)
-
-	fmt.Printf("n: %v, systemid: %v", n, systemId)
+	if n == 0 {
+		return nil, fmt.Errorf("filed parse bind transceiver resp")
+	}
 
 	p := make(OptionalParameters)
-	tlv := NewTLV(b[n:])
+	tlv, err := tlvDecoder(b[n:])
+	if err != nil {
+		return nil, err
+	}
 	p[tlv.Tag] = tlv
 
-	btr := BIND_TRANSCEIVER_RESP{
+	return &BIND_TRANSCEIVER_RESP{
 		systemId,
 		p,
-	}
-	return btr
+	}, nil
 }
 
-type BIND_TRANSCEIVER_RESP struct {
-	SystemId string
-	OptionalParameters
-}
 
-type OptionalParameters map[uint16]*TLV
-
-type pduResp interface {
-	GetCommandId() uint32
-}
