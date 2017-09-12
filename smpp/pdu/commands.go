@@ -12,11 +12,6 @@ const (
 	enquire_link uint32 = 0x00000015
 	enquire_link_resp uint32 = 0x80000015
 
-	/*command id*/
-	ESME_ROK = 0x00000000
-
-	/*command status*/
-
 	/*tlv tag*/
 	SC_INTERFACE_VERSION = 0x0210
 )
@@ -52,10 +47,6 @@ func (c *BindTransceiverCommand) Bytes() []byte {
 	return b
 }
 
-
-
-/*type BindTransceiverResp struct {
-	systemId string,
-	sc_interface_version,
-}*/
-
+type Unbind struct {
+	Header
+}
