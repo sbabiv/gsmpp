@@ -1,21 +1,31 @@
 package smpp
 
+import "time"
+
 type ChannelEvents string
 
 var (
 	CONNECTED ChannelEvents = "CONNECTED"
 	DISCONNECTED ChannelEvents = "DISCONNECTED"
 	CONN_FAIL ChannelEvents = "CONNECTION FAILED"
-	BIND ChannelEvents = "BIND"
+	BOUND_TRX ChannelEvents = "BOUND_TRX"
+	BOUND_RX ChannelEvents ="BOUND_RX"
+	BOUND_TX ChannelEvents ="BOUND_TX"
+	CLOSED ChannelEvents ="CLOSED"
+	BIND_FAIL ChannelEvents = "BIND_FAILED"
 	UNBIND ChannelEvents = "UNBIND"
 	SEND_ENQUIRE_LINK ChannelEvents = "SEND_ENQUIRE_LINK"
+	SEND_ENQUIRE_LINK_ERR ChannelEvents = "SEND_ENQUIRE_LINK_ERR"
+
+	READ_PDU_ERR ChannelEvents = "READ_ERR"
+	SKIP_PDU ChannelEvents = "SKIP_PDU"
 )
 
 type Event struct {
 	ChannelEvents
-	Message string
+	Time time.Time
 }
 
-func NewEvent(events ChannelEvents, msg string) Event  {
-	return Event{events, msg}
+func NewEvent(events ChannelEvents) Event  {
+	return Event{events, time.Now()}
 }

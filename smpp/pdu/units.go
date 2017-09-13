@@ -14,6 +14,8 @@ const (
 
 var seq uint32 = uint32(time.Now().Unix())
 
+type OptionalParameters map[uint16]*TLV
+
 func coctet(v string) string {
 	return v + NullTerminated
 }
@@ -40,30 +42,8 @@ func (h *Header)Bytes() []byte {
 	return buf.Bytes()
 }
 
-type EnquireLink struct {
-	Header
-}
-
-func NewEnquireLinkResp(sequence uint32) *EnquireLink {
-	return &EnquireLink{Header{
-		Length:   HeaderLength,
-		Id:       enquire_link_resp,
-		Status:   0,
-		Sequence: sequence},
-	}
-}
-
-func NewEnquireLink() *EnquireLink {
-	return &EnquireLink{Header{
-		Length:   HeaderLength,
-		Id:       enquire_link,
-		Status:   0,
-		Sequence: sequenceInc()},
-	}
-}
-
-func (e *EnquireLink)Bytes() []byte  {
-	return e.Header.Bytes()
+func (h *Header)GetBodyLen() uint32 {
+	return h.Length - HeaderLength
 }
 
 type TLV struct {
@@ -72,9 +52,7 @@ type TLV struct {
 	Value  []byte
 }
 
-type OptionalParameters map[uint16]*TLV
-
-type BIND_TRANSCEIVER_RESP struct {
+type BindTransceiverResp struct {
 	SystemId string
 	OptionalParameters
 }
