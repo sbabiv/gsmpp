@@ -35,6 +35,7 @@ func tlvDecoder(b []byte) (*pdu.TLV, error) {
 func HeaderDecoder(r Reader) (*pdu.Header, error){
 	b := make([]byte, pdu.HeaderLength, pdu.HeaderLength)
 	_, err := r.Read(b)
+
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,6 @@ func Skip(r Reader, len int) ([]byte, error) {
 	if len == 0 {
 		return nil, nil
 	}
-
 	b := make([]byte, len, len)
 	_, err := r.Read(b)
 

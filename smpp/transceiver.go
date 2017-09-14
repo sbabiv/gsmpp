@@ -40,7 +40,7 @@ func NewTransceiver(host string, port int, systemId string, password string, sys
 
 func (t *Transceiver) Bind() error {
 	var err error
-	t.conn, err = net.Dial("tcp", t.host + ":" + strconv.Itoa(t.port))
+	t.conn, err = net.Dial("tcp", t.host+":"+strconv.Itoa(t.port))
 	if err != nil {
 		t.ChannelState <- events.NewEvent(events.CONN_FAIL)
 		return err
@@ -58,8 +58,9 @@ func (t *Transceiver) Bind() error {
 	return nil
 }
 
-func (t *Transceiver)Unbind() {
-	t.conn.Write(pdu.NewUnbindCommand().Bytes())
+func (t *Transceiver)Unbind() error {
+	_, err := t.conn.Write(pdu.NewUnbindCommand().Bytes())
+	return err
 }
 
 func (t *Transceiver) sendEnquireLink()  {
@@ -73,15 +74,19 @@ func (t *Transceiver) sendEnquireLink()  {
 	}
 }
 
-func (t *Transceiver) Close(){
+func (t *Transceiver) Close() error {
 	if t.enquirelinkTicker != nil {
 		t.enquirelinkTicker.Stop()
 	}
 	if t.conn != nil {
-		t.conn.Close()
+		err := t.conn.Close()
+		if err != nil {
+			return err
+		}
 		t.conn = nil
 	}
 	t.ChannelState <- events.NewEvent(events.DISCONNECTED)
+	return nil
 }
 
 func (t *Transceiver) reader() {
@@ -112,8 +117,10 @@ func (t *Transceiver) reader() {
 		case pdu.ENQUIRE_LINK:
 			t.conn.Write(pdu.NewEnquireLinkRespCommand(h.Sequence).Bytes())
 
-		//case pdu.:
-			
+		case pdu.UNBIND_RESP:
+			t.ChannelState <- events.NewEvent(events.UNBIND)
+			t.Close()
+			return
 
 		default:
 			_, err := decoder.Skip(t.conn, int(h.GetBodyLen()))

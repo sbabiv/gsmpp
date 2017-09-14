@@ -90,11 +90,11 @@ func (c *BindCommand) Bytes() []byte {
 }
 
 type UnbindCommand struct {
-	Header
+	*Header
 }
 
 func NewUnbindCommand() *UnbindCommand{
-	return &UnbindCommand{}
+	return &UnbindCommand{NewHeader(HeaderLength, UNBIND,0)}
 }
 
 type EnquireLinkCommand struct {
