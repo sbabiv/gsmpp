@@ -1,4 +1,4 @@
-package smpp
+package events
 
 import "time"
 
@@ -14,7 +14,9 @@ var (
 	CLOSED ChannelEvents ="CLOSED"
 	BIND_FAIL ChannelEvents = "BIND_FAILED"
 	UNBIND ChannelEvents = "UNBIND"
+
 	SEND_ENQUIRE_LINK ChannelEvents = "SEND_ENQUIRE_LINK"
+	SEND_ENQUIRE_LINK_RESP ChannelEvents = "SEND_ENQUIRE_LINK_RESP"
 	SEND_ENQUIRE_LINK_ERR ChannelEvents = "SEND_ENQUIRE_LINK_ERR"
 
 	READ_PDU_ERR ChannelEvents = "READ_ERR"

@@ -4,9 +4,9 @@ import (
 	"time"
 	"strconv"
 	"github.com/gsmpp/smpp/pdu"
-	"github.com/gsmpp/smpp/tcp"
 	"github.com/gsmpp/smpp/decoder"
-	"fmt"
+	"net"
+	"github.com/gsmpp/smpp/events"
 )
 
 
@@ -20,9 +20,9 @@ type Transceiver struct {
 	addrTon byte
 	addrNpi byte
 	addressRange string
-	conn *tcp.Client
+	conn net.Conn
 
-	ChannelState chan Event
+	ChannelState chan events.Event
 	enquirelinkTicker *time.Ticker
 }
 
@@ -34,25 +34,22 @@ func NewTransceiver(host string, port int, systemId string, password string, sys
 		password:         password,
 		systemType:       systemType,
 		interfaceVersion: pdu.SMPP_INTERFACE_VERSION,
-		ChannelState:     make(chan Event, 1),
-		conn:             &tcp.Client{},
+		ChannelState:     make(chan events.Event, 1),
 	}
 }
 
 func (t *Transceiver) Bind() error {
-	err := t.conn.Dial("tcp", t.host + ":" + strconv.Itoa(t.port))
+	var err error
+	t.conn, err = net.Dial("tcp", t.host + ":" + strconv.Itoa(t.port))
 	if err != nil {
-		t.ChannelState <- NewEvent(CONN_FAIL)
+		t.ChannelState <- events.NewEvent(events.CONN_FAIL)
 		return err
 	}
-
-	t.ChannelState <- NewEvent(CONNECTED)
-	bind := pdu.NewBindTransceiverCommand(t.systemId, t.password, t.systemType, t.addressRange, t.addrTon, t.addrNpi)
-
-	_, err = t.conn.Write(bind.Bytes())
+	t.ChannelState <- events.NewEvent(events.CONNECTED)
+	_, err = t.conn.Write(pdu.NewBindTrxCommand(t.systemId, t.password, t.systemType, t.addressRange, t.addrTon, t.addrNpi).Bytes())
 	if err != nil {
-		t.ChannelState <- NewEvent(BIND_FAIL)
-		t.conn.Close()
+		t.ChannelState <- events.NewEvent(events.BIND_FAIL)
+		t.Close()
 		return err
 	}
 
@@ -67,51 +64,60 @@ func (t *Transceiver)Unbind() {
 
 func (t *Transceiver) sendEnquireLink()  {
 	for range t.enquirelinkTicker.C {
-		n, err := t.conn.Write(pdu.NewEnquireLinkCommand().Bytes())
-		if err != nil || n == 0 {
-			t.ChannelState <- NewEvent(SEND_ENQUIRE_LINK_ERR)
-			t.conn.Close()
-
+		_, err := t.conn.Write(pdu.NewEnquireLinkCommand().Bytes())
+		if err != nil {
+			t.Close()
 			return
 		}
-		t.ChannelState <- NewEvent(SEND_ENQUIRE_LINK)
+		t.ChannelState <- events.NewEvent(events.SEND_ENQUIRE_LINK)
 	}
+}
+
+func (t *Transceiver) Close(){
+	if t.enquirelinkTicker != nil {
+		t.enquirelinkTicker.Stop()
+	}
+	if t.conn != nil {
+		t.conn.Close()
+		t.conn = nil
+	}
+	t.ChannelState <- events.NewEvent(events.DISCONNECTED)
 }
 
 func (t *Transceiver) reader() {
 	for {
 		h, err := decoder.HeaderDecoder(t.conn)
 		if err != nil {
-			t.ChannelState <- NewEvent(READ_PDU_ERR)
+			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+			t.Close()
+			return
 		}
-		fmt.Printf("len: %v, id: %v, seq: %v\n", h.Length, h.Id, h.Sequence)
 
 		switch h.Id {
-		case pdu.BIND_TRANSCEIVER_RESP:
-			val, err := decoder.BindTransceiverDecoder(t.conn, int(h.GetBodyLen()))
-			if err != nil {
-				t.ChannelState <- NewEvent(BIND_FAIL)
-			}
-			fmt.Printf("bind resp. system id: %v\n", val.SystemId)
-			t.ChannelState <- NewEvent(BOUND_TRX)
 
-			//t.enquirelinkTicker = time.NewTicker(time.Second * 30)
-			//go t.sendEnquireLink()
+		case pdu.BIND_TRANSCEIVER_RESP:
+			_, err := decoder.BindTransceiverDecoder(t.conn, int(h.GetBodyLen()))
+			if err != nil {
+				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+				t.conn.Close()
+				return
+			}
+			t.ChannelState <- events.NewEvent(events.BOUND_TRX)
+			t.enquirelinkTicker = time.NewTicker(time.Second * 30)
+			go t.sendEnquireLink()
 
 		case pdu.ENQUIRE_LINK_RESP:
-			t.ChannelState <- NewEvent(SEND_ENQUIRE_LINK_ERR)
+			t.ChannelState <- events.NewEvent(events.SEND_ENQUIRE_LINK_RESP)
+
 		case pdu.ENQUIRE_LINK:
 			t.conn.Write(pdu.NewEnquireLinkRespCommand(h.Sequence).Bytes())
-		default:
-			if h.Sequence == 13 {
-				fmt.Println("")
-			}
 
+		default:
 			_, err := decoder.Skip(t.conn, int(h.GetBodyLen()))
 			if err != nil {
-				t.ChannelState <- NewEvent(READ_PDU_ERR)
-			}else {
-				t.ChannelState <- NewEvent(SKIP_PDU)
+				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+			} else {
+				t.ChannelState <- events.NewEvent(events.SKIP_PDU)
 			}
 		}
 	}
