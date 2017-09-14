@@ -3,10 +3,10 @@ package smpp
 import (
 	"time"
 	"strconv"
-	"github.com/gsmpp/smpp/pdu"
-	"github.com/gsmpp/smpp/decoder"
 	"net"
-	"github.com/gsmpp/smpp/events"
+	"github.com/sbabiv/gsmpp/smpp/pdu"
+	"github.com/sbabiv/gsmpp/smpp/decoder"
+	"github.com/sbabiv/gsmpp/smpp/events"
 )
 
 

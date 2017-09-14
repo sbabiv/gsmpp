@@ -1,9 +1,9 @@
 package decoder
 
 import (
-	"github.com/gsmpp/smpp/pdu"
 	"encoding/binary"
 	"errors"
+	"github.com/sbabiv/gsmpp/smpp/pdu"
 )
 
 type Reader interface {
