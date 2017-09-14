@@ -108,9 +108,12 @@ func (t *Transceiver) reader() {
 
 		case pdu.ENQUIRE_LINK_RESP:
 			t.ChannelState <- events.NewEvent(events.SEND_ENQUIRE_LINK_RESP)
-
+			
 		case pdu.ENQUIRE_LINK:
 			t.conn.Write(pdu.NewEnquireLinkRespCommand(h.Sequence).Bytes())
+
+		//case pdu.:
+			
 
 		default:
 			_, err := decoder.Skip(t.conn, int(h.GetBodyLen()))
