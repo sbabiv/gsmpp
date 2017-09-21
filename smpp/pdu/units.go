@@ -46,12 +46,6 @@ func (h *Header)GetBodyLen() uint32 {
 	return h.Length - HeaderLength
 }
 
-type TLV struct {
-	Tag    uint16
-	Length uint16
-	Value  []byte
-}
-
 type BindTransceiverResp struct {
 	SystemId string
 	OptionalParameters
@@ -126,3 +120,17 @@ func NewEnquireLinkRespCommand(sequence uint32) *EnquireLinkCommand {
 func (e *EnquireLinkCommand)Bytes() []byte  {
 	return e.Header.Bytes()
 }
+
+type DELIVER_SM struct {
+	*Header
+
+}
+
+
+//type DeliverSmResp struct {
+//	*Header
+//}
+//
+//func NewDeliverSmResp() *DeliverSmResp{
+//
+//}

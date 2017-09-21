@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"net"
 	"github.com/sbabiv/gsmpp/smpp/pdu"
-	"github.com/sbabiv/gsmpp/smpp/decoder"
 	"github.com/sbabiv/gsmpp/smpp/events"
 )
 
@@ -90,45 +89,45 @@ func (t *Transceiver) Close() error {
 }
 
 func (t *Transceiver) reader() {
-	for {
-		h, err := decoder.HeaderDecoder(t.conn)
-		if err != nil {
-			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
-			t.Close()
-			return
-		}
-
-		switch h.Id {
-
-		case pdu.BIND_TRANSCEIVER_RESP:
-			_, err := decoder.BindTransceiverDecoder(t.conn, int(h.GetBodyLen()))
-			if err != nil {
-				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
-				t.conn.Close()
-				return
-			}
-			t.ChannelState <- events.NewEvent(events.BOUND_TRX)
-			t.enquirelinkTicker = time.NewTicker(time.Second * 30)
-			go t.sendEnquireLink()
-
-		case pdu.ENQUIRE_LINK_RESP:
-			t.ChannelState <- events.NewEvent(events.SEND_ENQUIRE_LINK_RESP)
-			
-		case pdu.ENQUIRE_LINK:
-			t.conn.Write(pdu.NewEnquireLinkRespCommand(h.Sequence).Bytes())
-
-		case pdu.UNBIND_RESP:
-			t.ChannelState <- events.NewEvent(events.UNBIND)
-			t.Close()
-			return
-
-		default:
-			_, err := decoder.Skip(t.conn, int(h.GetBodyLen()))
-			if err != nil {
-				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
-			} else {
-				t.ChannelState <- events.NewEvent(events.SKIP_PDU)
-			}
-		}
-	}
+	//for {
+	//	h, err := decoder.HeaderDecoder(t.conn)
+	//	if err != nil {
+	//		t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+	//		t.Close()
+	//		return
+	//	}
+	//
+	//	switch h.Id {
+	//
+	//	case pdu.BIND_TRANSCEIVER_RESP:
+	//		_, err := decoder.BindTransceiverDecoder(t.conn, int(h.GetBodyLen()))
+	//		if err != nil {
+	//			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+	//			t.conn.Close()
+	//			return
+	//		}
+	//		t.ChannelState <- events.NewEvent(events.BOUND_TRX)
+	//		t.enquirelinkTicker = time.NewTicker(time.Second * 30)
+	//		go t.sendEnquireLink()
+	//
+	//	case pdu.ENQUIRE_LINK_RESP:
+	//		t.ChannelState <- events.NewEvent(events.SEND_ENQUIRE_LINK_RESP)
+	//
+	//	case pdu.ENQUIRE_LINK:
+	//		t.conn.Write(pdu.NewEnquireLinkRespCommand(h.Sequence).Bytes())
+	//
+	//	case pdu.UNBIND_RESP:
+	//		t.ChannelState <- events.NewEvent(events.UNBIND)
+	//		t.Close()
+	//		return
+	//
+	//	default:
+	//		_, err := decoder.Skip(t.conn, int(h.GetBodyLen()))
+	//		if err != nil {
+	//			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+	//		} else {
+	//			t.ChannelState <- events.NewEvent(events.SKIP_PDU)
+	//		}
+	//	}
+	//}
 }

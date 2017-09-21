@@ -1,9 +1,8 @@
-package decoder
+package pdu
 
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/sbabiv/gsmpp/smpp/pdu"
 )
 
 type Reader interface {
@@ -19,28 +18,28 @@ func coctetDecoder(b []byte) (int, string) {
 	return 0, ""
 }
 
-func tlvDecoder(b []byte) (*pdu.TLV, error) {
+func tlvDecoder(b []byte) (*TLV, error) {
 	l := binary.BigEndian.Uint16(b[2:4])
 	if len(b)-int(l) < 0 {
 		return nil, errors.New("TLV decoding error")
 	}
 
-	return &pdu.TLV{
+	return &TLV{
 		Tag:    binary.BigEndian.Uint16(b[:2]),
 		Length: l,
 		Value:  b[4:4+l],
 	}, nil
 }
 
-func HeaderDecoder(r Reader) (*pdu.Header, error){
-	b := make([]byte, pdu.HeaderLength, pdu.HeaderLength)
+func HeaderDecoder(r Reader) (*Header, error){
+	b := make([]byte, HeaderLength, HeaderLength)
 	_, err := r.Read(b)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &pdu.Header{
+	return &Header{
 		Length:   binary.BigEndian.Uint32(b[0:4]),
 		Id:       binary.BigEndian.Uint32(b[4:8]),
 		Status:   binary.BigEndian.Uint32(b[8:12]),
@@ -48,7 +47,7 @@ func HeaderDecoder(r Reader) (*pdu.Header, error){
 	}, nil
 }
 
-func BindTransceiverDecoder(r Reader, len int) (*pdu.BindTransceiverResp, error) {
+func BindTransceiverDecoder(r Reader, len int) (*BindTransceiverResp, error) {
 	b := make([]byte, len, len)
 	_, err := r.Read(b)
 	if err != nil {
@@ -60,14 +59,14 @@ func BindTransceiverDecoder(r Reader, len int) (*pdu.BindTransceiverResp, error)
 		return nil, errors.New("filed parse bind transceiver resp")
 	}
 
-	p := make(pdu.OptionalParameters)
+	p := make(OptionalParameters)
 	tlv, err := tlvDecoder(b[n:])
 	if err != nil {
 		return nil, err
 	}
 	p[tlv.Tag] = tlv
 
-	return &pdu.BindTransceiverResp{
+	return &BindTransceiverResp{
 		systemId,
 		p,
 	}, nil
