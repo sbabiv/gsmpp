@@ -23,7 +23,7 @@ type Field struct {
 }
 
 func F(n FieldName, v interface{}) *Field {
-	return &Field{n, Encode(v)}
+	return &Field{n, encode(v)}
 }
 
 func (f *Field) Bytes() []byte {
@@ -44,10 +44,10 @@ type TLV struct {
 	Value  []byte
 }
 
-type FieldNames []FieldName
+type Optionals map[FieldName]*TLV
 
-func (f FieldNames) Decode([]byte) ([]Field, []TLV) {
-	return nil, nil
+func (this Optionals) Encode() []byte {
+	return nil
 }
 
 type Fields []*Field
@@ -60,7 +60,7 @@ func (this Fields) Encode() []byte {
 	return b.Bytes()
 }
 
-func Encode(v interface{}) []byte {
+func encode(v interface{}) []byte {
 	switch v.(type) {
 	case []byte:
 		return v.([]byte)
@@ -71,4 +71,47 @@ func Encode(v interface{}) []byte {
 	default:
 		return []byte{0}
 	}
+}
+
+type FieldNames []FieldName
+
+func (f FieldNames) Decode([]byte) ([]Field, []TLV) {
+	return nil, nil
+}
+
+type Command struct {
+	*Header
+	data []byte
+}
+
+func (this *Command) Bytes() []byte {
+	return this.data
+}
+
+func (this *Command) Dump() string {
+	return hex.Dump(this.data)
+}
+
+func NewCommand(id uint32, status uint32, fields Fields, optionals Optionals) *Command {
+	var b bytes.Buffer
+
+	b.Write(fields.Encode())
+	b.Write(optionals.Encode())
+	h := NewHeader(uint32(b.Len()), id, status)
+
+	return &Command{h, append(h.Bytes(), b.Bytes()...)}
+}
+
+func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, addrNpi byte) *Command {
+	fields := Fields{
+		F(SystemId, systemId),
+		F(Password, password),
+		F(SystemType, systemType),
+		F(InterfaceVersion, SMPP_INTERFACE_VERSION),
+		F(AddrTon, addrTon),
+		F(AddrNpi, addrNpi),
+		F(AddressRange, addressRange),
+	}
+
+	return NewCommand(BIND_TRANSCEIVER, 0, fields, nil)
 }
