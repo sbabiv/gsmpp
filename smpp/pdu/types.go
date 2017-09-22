@@ -103,7 +103,7 @@ func NewCommand(id uint32, status uint32, fields Fields, optionals Optionals) *C
 }
 
 func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, addrNpi byte) *Command {
-	fields := Fields{
+	return NewCommand(BIND_TRANSCEIVER, 0, Fields{
 		F(SystemId, systemId),
 		F(Password, password),
 		F(SystemType, systemType),
@@ -111,7 +111,5 @@ func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, ad
 		F(AddrTon, addrTon),
 		F(AddrNpi, addrNpi),
 		F(AddressRange, addressRange),
-	}
-
-	return NewCommand(BIND_TRANSCEIVER, 0, fields, nil)
+	}, nil)
 }
