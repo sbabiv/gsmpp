@@ -23,7 +23,7 @@ func (f FieldNames) Decode(buffer *bytes.Buffer) Fields {
 			ScheduleDeliveryTime,
 			ValidityPeriod:
 
-			b, _ := buffer.ReadBytes(0x0)
+			b, _ := buffer.ReadBytes(0x00)
 			result[i] = F(name, b)
 
 		case
@@ -41,10 +41,10 @@ func (f FieldNames) Decode(buffer *bytes.Buffer) Fields {
 			SmLength:
 
 			b, _ := buffer.ReadByte()
-			result[i] = F(name, b)
+			result[i] = F(name, []byte{b})
 
 		case ShortMessage:
-			result[i] = F(name, buffer.Next(int(result[i-1])))
+			result[i] = F(name, buffer.Next(int(result[i-1].val[0])))
 		}
 	}
 	return result

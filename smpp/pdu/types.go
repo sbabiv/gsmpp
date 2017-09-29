@@ -36,7 +36,11 @@ const (
 	AddrNpi FieldName = "addr_npi"
 	AddressRange = "address_range"
 
-	SC_INTERFACE_VERSION TagName = 0x0210
+	/*TLV*/
+	ScInterfaceVersion TagName = 0x0210
+	ReceiptedMessageId TagName = 0x001e
+	MessageState TagName = 0x0427
+
 )
 
 type Field struct {
@@ -46,6 +50,10 @@ type Field struct {
 
 func F(n FieldName, v interface{}) *Field {
 	return &Field{n, encode(v)}
+}
+
+func (f *Field) Len() int {
+	return len(f.val)
 }
 
 func (f *Field) Bytes() []byte {
