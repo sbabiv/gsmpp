@@ -1,35 +1,11 @@
 package pdu
 
-import (
+/*import (
 	"encoding/binary"
 	"errors"
-)
-
-type Reader interface {
-	Read(b []byte) (n int, err error)
-}
-
-func coctetDecoder(b []byte) (int, string) {
-	for i, v := range b {
-		if v == 0 {
-			return i + 1, string(b[:i+1])
-		}
-	}
-	return 0, ""
-}
-
-func tlvDecoder(b []byte) (*TLV, error) {
-	l := binary.BigEndian.Uint16(b[2:4])
-	if len(b)-int(l) < 0 {
-		return nil, errors.New("TLV decoding error")
-	}
-
-	return &TLV{
-		Tag:    binary.BigEndian.Uint16(b[:2]),
-		Length: l,
-		Value:  b[4:4+l],
-	}, nil
-}
+	"net"
+)*/
+/*
 
 func HeaderDecoder(r Reader) (*Header, error){
 	b := make([]byte, HeaderLength, HeaderLength)
@@ -85,6 +61,8 @@ func Skip(r Reader, len int) ([]byte, error) {
 
 	return b, nil
 }
+*/
+
 
 
 

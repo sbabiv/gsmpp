@@ -6,15 +6,37 @@ import (
 )
 
 type FieldName string
+type TagName uint16
 
 const (
 	SystemId FieldName = "system_id"
 	Password FieldName = "password"
 	SystemType FieldName = "system_type"
+	ServiceType FieldName = "service_type"
+	MessageId FieldName = "message_id"
 	InterfaceVersion FieldName = "interface_version"
+	SourceAddrTon FieldName = "source_addr_ton"
+	SourceAddrNpi FieldName = "source_addr_npi"
+	SourceAddr FieldName = "source_addr"
+	DestAddrTon FieldName = "dest_addr_ton"
+	DestAddrNpi FieldName = "dest_addr_npi"
+	DestinationAddr FieldName = "destination_addr"
+	EsmClass FieldName = "esm_class"
+	ProtocolId FieldName = "protocol_id"
+	PriorityFlag FieldName = "priority_flag"
+	ScheduleDeliveryTime FieldName = "schedule_delivery_time"
+	ValidityPeriod FieldName = "validity_period"
+	RegisteredDelivery FieldName = "registered_delivery"
+	ReplaceIfPresentFlag FieldName = "replace_if_present_flag"
+	DataCoding FieldName = "data_coding"
+	SmDefaultMsgId FieldName = "sm_default_msg_id"
+	SmLength FieldName = "sm_length"
+	ShortMessage FieldName = "short_message"
 	AddrTon FieldName = "add_ton"
 	AddrNpi FieldName = "addr_npi"
 	AddressRange = "address_range"
+
+	SC_INTERFACE_VERSION TagName = 0x0210
 )
 
 type Field struct {
@@ -44,7 +66,7 @@ type TLV struct {
 	Value  []byte
 }
 
-type Optionals map[FieldName]*TLV
+type Optionals map[TagName]*TLV
 
 func (this Optionals) Encode() []byte {
 	return nil
@@ -73,36 +95,30 @@ func encode(v interface{}) []byte {
 	}
 }
 
-type FieldNames []FieldName
-
-func (f FieldNames) Decode([]byte) ([]Field, []TLV) {
-	return nil, nil
-}
-
-type Command struct {
+type Unit struct {
 	*Header
 	data []byte
 }
 
-func (this *Command) Bytes() []byte {
+func (this *Unit) Bytes() []byte {
 	return this.data
 }
 
-func (this *Command) Dump() string {
+func (this *Unit) Dump() string {
 	return hex.Dump(this.data)
 }
 
-func NewCommand(id uint32, status uint32, fields Fields, optionals Optionals) *Command {
+func NewCommand(id uint32, status uint32, fields Fields, optionals Optionals) *Unit {
 	var b bytes.Buffer
 
 	b.Write(fields.Encode())
 	b.Write(optionals.Encode())
 	h := NewHeader(uint32(b.Len()), id, status)
 
-	return &Command{h, append(h.Bytes(), b.Bytes()...)}
+	return &Unit{h, append(h.Bytes(), b.Bytes()...)}
 }
 
-func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, addrNpi byte) *Command {
+func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, addrNpi byte) *Unit {
 	return NewCommand(BIND_TRANSCEIVER, 0, Fields{
 		F(SystemId, systemId),
 		F(Password, password),
@@ -112,4 +128,13 @@ func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, ad
 		F(AddrNpi, addrNpi),
 		F(AddressRange, addressRange),
 	}, nil)
+}
+
+type UnitRsp struct {
+	*Header
+	*Body
+}
+
+func (this *UnitRsp) Dump() string {
+	return ""
 }
