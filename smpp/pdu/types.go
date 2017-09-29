@@ -5,43 +5,7 @@ import (
 	"bytes"
 )
 
-type FieldName string
-type TagName uint16
 
-const (
-	SystemId FieldName = "system_id"
-	Password FieldName = "password"
-	SystemType FieldName = "system_type"
-	ServiceType FieldName = "service_type"
-	MessageId FieldName = "message_id"
-	InterfaceVersion FieldName = "interface_version"
-	SourceAddrTon FieldName = "source_addr_ton"
-	SourceAddrNpi FieldName = "source_addr_npi"
-	SourceAddr FieldName = "source_addr"
-	DestAddrTon FieldName = "dest_addr_ton"
-	DestAddrNpi FieldName = "dest_addr_npi"
-	DestinationAddr FieldName = "destination_addr"
-	EsmClass FieldName = "esm_class"
-	ProtocolId FieldName = "protocol_id"
-	PriorityFlag FieldName = "priority_flag"
-	ScheduleDeliveryTime FieldName = "schedule_delivery_time"
-	ValidityPeriod FieldName = "validity_period"
-	RegisteredDelivery FieldName = "registered_delivery"
-	ReplaceIfPresentFlag FieldName = "replace_if_present_flag"
-	DataCoding FieldName = "data_coding"
-	SmDefaultMsgId FieldName = "sm_default_msg_id"
-	SmLength FieldName = "sm_length"
-	ShortMessage FieldName = "short_message"
-	AddrTon FieldName = "add_ton"
-	AddrNpi FieldName = "addr_npi"
-	AddressRange = "address_range"
-
-	/*TLV*/
-	ScInterfaceVersion TagName = 0x0210
-	ReceiptedMessageId TagName = 0x001e
-	MessageState TagName = 0x0427
-
-)
 
 type Field struct {
 	FieldName
