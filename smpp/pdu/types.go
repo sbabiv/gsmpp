@@ -5,8 +5,6 @@ import (
 	"bytes"
 )
 
-
-
 type Field struct {
 	FieldName
 	val []byte
@@ -37,6 +35,19 @@ type TLV struct {
 	Length uint16
 	Value  []byte
 }
+
+func (this *TLV) String() string {
+	return string(this.Value)
+}
+/*func (this *TLV) Byte() string {
+	return string(this.Value)
+}
+func (this *TLV) Short() string {
+	return string(this.Value)
+}
+func (this *TLV) Int() string {
+	return string(this.Value)
+}*/
 
 type Optionals map[TagName]*TLV
 
@@ -80,18 +91,31 @@ func (this *Unit) Dump() string {
 	return hex.Dump(this.data)
 }
 
-func NewCommand(id uint32, status uint32, fields Fields, optionals Optionals) *Unit {
+func NewUnit(id uint32, status uint32, seq *uint32, fields Fields, optionals Optionals) *Unit {
 	var b bytes.Buffer
 
 	b.Write(fields.Encode())
 	b.Write(optionals.Encode())
-	h := NewHeader(uint32(b.Len()), id, status)
+	h := NewHeader(uint32(b.Len()), id, status, seq)
 
 	return &Unit{h, append(h.Bytes(), b.Bytes()...)}
 }
 
+type UnitRsp struct {
+	*Header
+	*Body
+}
+
+func (this *UnitRsp) Dump() string {
+	var b bytes.Buffer
+	b.Write(this.Header.Bytes())
+	b.Write(this.Body.Raw)
+
+	return hex.Dump(b.Bytes())
+}
+
 func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, addrNpi byte) *Unit {
-	return NewCommand(BIND_TRANSCEIVER, 0, Fields{
+	return NewUnit(BIND_TRANSCEIVER, 0x0, nil, Fields{
 		F(SystemId, systemId),
 		F(Password, password),
 		F(SystemType, systemType),
@@ -102,11 +126,24 @@ func NewBindTrx(systemId, password, systemType, addressRange string, addrTon, ad
 	}, nil)
 }
 
-type UnitRsp struct {
-	*Header
-	*Body
+func NewEnquireLink() *Unit {
+	return NewUnit(ENQUIRE_LINK,0,nil,nil,nil)
 }
 
-func (this *UnitRsp) Dump() string {
-	return ""
+func NewEnquireLinkResp(seq uint32) *Unit {
+	//5.1.3 command_status
+	return NewUnit(ENQUIRE_LINK_RESP, ESME_ROK, &seq, nil, nil)
+}
+
+func NewDeliverSmResp(seq uint32) *Unit {
+	//5.1.3 command_status
+	return NewUnit(DELIVER_SM_RESP, ESME_ROK, &seq, nil, nil)
+}
+
+func NewUnbind() *Unit {
+	return NewUnit(UNBIND, 0x0, nil, nil, nil)
+}
+
+func NewUnbindResp(seq uint32) *Unit {
+	return NewUnit(UNBIND_RESP, ESME_ROK, &seq, nil, nil)
 }

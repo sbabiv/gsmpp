@@ -31,8 +31,15 @@ type Header struct {
 	Sequence uint32
 }
 
-func NewHeader(len uint32, id uint32, status uint32) *Header {
-	return &Header{Length: len + HeaderLength, Id: id, Status: status, Sequence: sequenceInc()}
+func NewHeader(len uint32, id uint32, status uint32, seq *uint32) *Header {
+	var sequence uint32
+	if seq != nil {
+		sequence = *seq
+	} else {
+		sequence = sequenceInc()
+	}
+
+	return &Header{Length: len + HeaderLength, Id: id, Status: status, Sequence: sequence}
 }
 
 func (h *Header)Bytes() []byte {
@@ -57,40 +64,15 @@ type BindCommand struct {
 	body   []byte
 }
 
-func NewBindTrxCommand(
-	systemId, password, systemType, addressRange string,
-	addrTon, addrNpi byte) *BindCommand {
-
-	var b bytes.Buffer
-	b.WriteString(coctet(systemId))
-	b.WriteString(coctet(password))
-	b.WriteString(coctet(systemType))
-	b.WriteByte(SMPP_INTERFACE_VERSION)
-	b.WriteByte(addrTon)
-	b.WriteByte(addrNpi)
-	b.WriteString(coctet(addressRange))
-	h := NewHeader(uint32(b.Len()), BIND_TRANSCEIVER, 0)
-
-	return &BindCommand{header: h, body: b.Bytes()}
-}
-
-func (c *BindCommand) Bytes() []byte {
-	h := c.header.Bytes()
-	b := make([]byte, len(h)+len(c.body))
-	copy(b, h)
-	copy(b[len(h):], c.body)
-
-	return b
-}
-
 type UnbindCommand struct {
 	*Header
 }
 
-func NewUnbindCommand() *UnbindCommand{
+/*func NewUnbindCommand() *UnbindCommand{
 	return &UnbindCommand{NewHeader(HeaderLength, UNBIND,0)}
-}
+}*/
 
+/*
 type EnquireLinkCommand struct {
 	Header
 }
@@ -126,13 +108,4 @@ type DELIVER_SM struct {
 
 }
 
-
-
-
-//type DeliverSmResp struct {
-//	*Header
-//}
-//
-//func NewDeliverSmResp() *DeliverSmResp{
-//
-//}
+*/

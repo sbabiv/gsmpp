@@ -59,3 +59,18 @@ func DecodeDeliverSm(h *pdu.Header, conn net.Conn)(*pdu.UnitRsp, error) {
 		pdu.ShortMessage,
 	})
 }
+
+func DecodeUnbindResp(h *pdu.Header, conn net.Conn) (*pdu.UnitRsp, error) {
+	return pdu.D(h, conn, nil)
+}
+
+func Skip(h *pdu.Header, conn net.Conn) {
+	_, _ = pdu.D(h, conn, nil)
+}
+
+func NewResp(h *pdu.Header) *pdu.UnitRsp {
+	return &pdu.UnitRsp{
+		h,
+		&pdu.Body{nil, nil, nil},
+	}
+}

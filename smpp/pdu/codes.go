@@ -11,25 +11,31 @@ const (
 	ENQUIRE_LINK uint32 = 0x00000015
 	ENQUIRE_LINK_RESP uint32 = 0x80000015
 
-	//command status
+	DELIVER_SM uint32 = 0x00000005
+	DELIVER_SM_RESP uint32 = 0x80000005
+
+	//
+
+
+	//5.1.3 command_status
 	//no error
-	ESME_ROK int = 0x00000000
+	ESME_ROK uint32 = 0x00000000
 	//Message Length is invalid
-	ESME_RINVMSGLEN int = 0x00000001
+	ESME_RINVMSGLEN uint32 = 0x00000001
 	//Command Length is invalid
-	ESME_RINVCMDLEN int = 0x00000002
+	ESME_RINVCMDLEN uint32 = 0x00000002
 	//Invalid Command ID
-	ESME_RINVCMDID int = 0x00000003
+	ESME_RINVCMDID uint32 = 0x00000003
 	//Incorrect BIND int for given command
-	ESME_RINVBNDSTS int = 0x00000004
+	ESME_RINVBNDSTS uint32 = 0x00000004
 	//ESME Already in Bound State
-	ESME_RALYBND int = 0x00000005
+	ESME_RALYBND uint32 = 0x00000005
 	//Invalid Priority Flad
-	ESME_RINVPRTFLG int = 0x00000006
+	ESME_RINVPRTFLG uint32 = 0x00000006
 	//Invalid Registred Delivery Flag
-	ESME_RINVREGDLVFLG = 0x00000007
+	ESME_RINVREGDLVFLG uint32 = 0x00000007
 	//System Error
-	ESME_RSYSERR int = 0x00000008
+	ESME_RSYSERR uint32 = 0x00000008
 
 	SMPP_INTERFACE_VERSION byte = 0x34
 )

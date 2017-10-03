@@ -6,6 +6,8 @@ import (
 	"net"
 	"github.com/sbabiv/gsmpp/smpp/pdu"
 	"github.com/sbabiv/gsmpp/smpp/events"
+	"github.com/sbabiv/gsmpp/smpp/pdu/decoders"
+	"fmt"
 )
 
 
@@ -45,7 +47,7 @@ func (t *Transceiver) Bind() error {
 		return err
 	}
 	t.ChannelState <- events.NewEvent(events.CONNECTED)
-	_, err = t.conn.Write(pdu.NewBindTrxCommand(t.systemId, t.password, t.systemType, t.addressRange, t.addrTon, t.addrNpi).Bytes())
+	_, err = t.conn.Write(pdu.NewBindTrx(t.systemId, t.password, t.systemType, t.addressRange, t.addrTon, t.addrNpi).Bytes())
 	if err != nil {
 		t.ChannelState <- events.NewEvent(events.BIND_FAIL)
 		t.Close()
@@ -58,13 +60,16 @@ func (t *Transceiver) Bind() error {
 }
 
 func (t *Transceiver)Unbind() error {
-	_, err := t.conn.Write(pdu.NewUnbindCommand().Bytes())
+	_, err := t.conn.Write(pdu.NewUnbind().Bytes())
+	if err == nil {
+		t.enquirelinkTicker.Stop()
+	}
 	return err
 }
 
 func (t *Transceiver) sendEnquireLink()  {
 	for range t.enquirelinkTicker.C {
-		_, err := t.conn.Write(pdu.NewEnquireLinkCommand().Bytes())
+		_, err := t.conn.Write(pdu.NewEnquireLink().Bytes())
 		if err != nil {
 			t.Close()
 			return
@@ -89,45 +94,62 @@ func (t *Transceiver) Close() error {
 }
 
 func (t *Transceiver) reader() {
-	//for {
-	//	h, err := decoder.HeaderDecoder(t.conn)
-	//	if err != nil {
-	//		t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
-	//		t.Close()
-	//		return
-	//	}
-	//
-	//	switch h.Id {
-	//
-	//	case pdu.BIND_TRANSCEIVER_RESP:
-	//		_, err := decoder.BindTransceiverDecoder(t.conn, int(h.GetBodyLen()))
-	//		if err != nil {
-	//			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
-	//			t.conn.Close()
-	//			return
-	//		}
-	//		t.ChannelState <- events.NewEvent(events.BOUND_TRX)
-	//		t.enquirelinkTicker = time.NewTicker(time.Second * 30)
-	//		go t.sendEnquireLink()
-	//
-	//	case pdu.ENQUIRE_LINK_RESP:
-	//		t.ChannelState <- events.NewEvent(events.SEND_ENQUIRE_LINK_RESP)
-	//
-	//	case pdu.ENQUIRE_LINK:
-	//		t.conn.Write(pdu.NewEnquireLinkRespCommand(h.Sequence).Bytes())
-	//
-	//	case pdu.UNBIND_RESP:
-	//		t.ChannelState <- events.NewEvent(events.UNBIND)
-	//		t.Close()
-	//		return
-	//
-	//	default:
-	//		_, err := decoder.Skip(t.conn, int(h.GetBodyLen()))
-	//		if err != nil {
-	//			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
-	//		} else {
-	//			t.ChannelState <- events.NewEvent(events.SKIP_PDU)
-	//		}
-	//	}
-	//}
+	for {
+		h, err := decoders.DecodeHeader(t.conn)
+		if err != nil {
+			t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+			t.Close()
+			return
+		}
+
+		switch h.Id {
+
+		case pdu.BIND_TRANSCEIVER_RESP:
+			r, err := decoders.DecodeBindResp(h, t.conn)
+			if err != nil {
+				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+				t.conn.Close()
+				return
+			}
+			fmt.Println(r.Dump())
+
+			t.ChannelState <- events.NewEvent(events.BOUND_TRX)
+			t.enquirelinkTicker = time.NewTicker(time.Second * 30)
+			go t.sendEnquireLink()
+
+
+		case pdu.ENQUIRE_LINK:
+			t.conn.Write(pdu.NewEnquireLinkResp(h.Sequence).Bytes())
+			t.ChannelState <- events.NewEvent(events.RECEIVE_ENQUITE_LINK)
+
+		case pdu.ENQUIRE_LINK_RESP:
+			t.ChannelState <- events.NewEvent(events.RECEIVE_ENQUITE_LINK_RESP)
+
+		case pdu.UNBIND:
+			t.conn.Write(pdu.NewUnbindResp(h.Sequence).Bytes())
+			t.ChannelState <- events.NewEvent(events.UNBIND)
+			t.Close()
+
+		case pdu.UNBIND_RESP:
+			t.ChannelState <- events.NewEvent(events.UNBIND)
+			t.Close()
+
+		case pdu.DELIVER_SM:
+			r, err := decoders.DecodeDeliverSm(h, t.conn)
+			if err != nil {
+				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+				t.conn.Close()
+				return
+			}
+
+			fmt.Println(r.Dump())
+
+			t.ChannelState <- events.NewEvent(events.DELIVER_SM)
+			t.conn.Write(pdu.NewDeliverSmResp(h.Sequence).Bytes())
+
+		default:
+			decoders.Skip(h, t.conn)
+			t.ChannelState <- events.NewEvent(events.SKIP_PDU)
+		}
+	}
 }
