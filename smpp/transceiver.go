@@ -93,6 +93,10 @@ func (t *Transceiver) Close() error {
 	return nil
 }
 
+func (t *Transceiver) Submit(message, number string) {
+	t.conn.Write(pdu.NewSubmitSm(message, number).Bytes())
+}
+
 func (t *Transceiver) reader() {
 	for {
 		h, err := decoders.DecodeHeader(t.conn)
@@ -146,6 +150,12 @@ func (t *Transceiver) reader() {
 
 			t.ChannelState <- events.NewEvent(events.DELIVER_SM)
 			t.conn.Write(pdu.NewDeliverSmResp(h.Sequence).Bytes())
+
+			/*
+
+			alert_notification
+			generic_nak
+			*/
 
 		default:
 			decoders.Skip(h, t.conn)

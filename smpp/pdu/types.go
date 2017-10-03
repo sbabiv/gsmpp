@@ -147,3 +147,26 @@ func NewUnbind() *Unit {
 func NewUnbindResp(seq uint32) *Unit {
 	return NewUnit(UNBIND_RESP, ESME_ROK, &seq, nil, nil)
 }
+
+func NewSubmitSm(message, number string) *Unit {
+	return NewUnit(SUBMIT_SM, 0x0, nil, Fields{
+		F(ServiceType, ""),
+		F(SourceAddrTon, byte(5)),
+		F(SourceAddrNpi, byte(0)),
+		F(SourceAddr, ""),
+		F(DestAddrNpi, 1),
+		F(DestAddrTon, 1),
+		F(DestinationAddr, number),
+		F(EsmClass, 0x00010011),
+		F(ProtocolId, byte(1)),
+		F(PriorityFlag, byte(0)),
+		F(ScheduleDeliveryTime, ""),
+		F(ValidityPeriod, ""),
+		F(RegisteredDelivery, 0x00001111),
+		F(ReplaceIfPresentFlag, 0),
+		F(DataCoding, byte(0x0)),
+		F(SmDefaultMsgId, 0),
+		F(SmLength, byte(len([]byte(message)))),
+		F(ShortMessage, []byte(message)),
+	}, nil)
+}
