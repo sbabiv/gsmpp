@@ -93,8 +93,11 @@ func (t *Transceiver) Close() error {
 	return nil
 }
 
-func (t *Transceiver) Submit(message, number string) {
-	t.conn.Write(pdu.NewSubmitSm(message, number).Bytes())
+func (t *Transceiver) Submit(message, number string) (uint32, error) {
+	sm := pdu.NewSubmitSm(message, number)
+	_, err := t.conn.Write(sm.Bytes())
+
+	return sm.Sequence, err
 }
 
 func (t *Transceiver) reader() {
@@ -141,16 +144,16 @@ func (t *Transceiver) reader() {
 		case pdu.DELIVER_SM:
 			r, err := decoders.DecodeDeliverSm(h, t.conn)
 			if err != nil {
-				t.ChannelState <- events.NewEvent(events.READ_PDU_ERR)
+				t.ChannelState <- events.NewEvent(events.DELIVER_SM)
 				t.conn.Close()
 				return
 			}
-
-			fmt.Println(r.Dump())
-
-			t.ChannelState <- events.NewEvent(events.DELIVER_SM)
 			t.conn.Write(pdu.NewDeliverSmResp(h.Sequence).Bytes())
 
+			id := r.Optionals[pdu.ReceiptedMessageId].String()
+			state := r.Optionals[pdu.MessageState].String()
+
+			fmt.Printf("deliv id: %v, state: %v", id, state)
 			/*
 
 			alert_notification

@@ -137,7 +137,9 @@ func NewEnquireLinkResp(seq uint32) *Unit {
 
 func NewDeliverSmResp(seq uint32) *Unit {
 	//5.1.3 command_status
-	return NewUnit(DELIVER_SM_RESP, ESME_ROK, &seq, nil, nil)
+	return NewUnit(DELIVER_SM_RESP, ESME_ROK, &seq, Fields{
+		F(MessageId, ""),
+	}, nil)
 }
 
 func NewUnbind() *Unit {
@@ -154,15 +156,15 @@ func NewSubmitSm(message, number string) *Unit {
 		F(SourceAddrTon, byte(5)),
 		F(SourceAddrNpi, byte(0)),
 		F(SourceAddr, ""),
-		F(DestAddrNpi, 1),
-		F(DestAddrTon, 1),
+		F(DestAddrNpi, byte(1)),
+		F(DestAddrTon, byte(1)),
 		F(DestinationAddr, number),
-		F(EsmClass, 0x00010011),
+		F(EsmClass, byte(EsmDeliv)),
 		F(ProtocolId, byte(1)),
 		F(PriorityFlag, byte(0)),
 		F(ScheduleDeliveryTime, ""),
 		F(ValidityPeriod, ""),
-		F(RegisteredDelivery, 0x00001111),
+		F(RegisteredDelivery, byte(RegisteredDeliv)),
 		F(ReplaceIfPresentFlag, 0),
 		F(DataCoding, byte(0x0)),
 		F(SmDefaultMsgId, 0),

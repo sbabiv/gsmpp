@@ -96,3 +96,12 @@ const (
 	ReceiptedMessageId TagName = 0x001e
 	MessageState 	   TagName = 0x0427
 )
+
+type Mask byte
+
+const (
+	//1011
+	EsmDeliv Mask = (2 << 2) | 3
+	//11101
+	RegisteredDeliv Mask = (7 << 2) | 1
+)
