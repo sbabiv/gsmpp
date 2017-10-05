@@ -3,6 +3,7 @@ package pdu
 import (
 	"encoding/hex"
 	"bytes"
+	"github.com/sbabiv/gsmpp/smpp/pdu/text"
 )
 
 type Field struct {
@@ -150,12 +151,13 @@ func NewUnbindResp(seq uint32) *Unit {
 	return NewUnit(UNBIND_RESP, ESME_ROK, &seq, nil, nil)
 }
 
-func NewSubmitSm(message, number string) *Unit {
+func NewSubmitSm(message, number, sourceAddr string, e text.Coding) *Unit {
+	txt := text.Encode(message, e)
 	return NewUnit(SUBMIT_SM, 0x0, nil, Fields{
 		F(ServiceType, ""),
 		F(SourceAddrTon, byte(5)),
 		F(SourceAddrNpi, byte(0)),
-		F(SourceAddr, ""),
+		F(SourceAddr, sourceAddr),
 		F(DestAddrNpi, byte(1)),
 		F(DestAddrTon, byte(1)),
 		F(DestinationAddr, number),
@@ -166,9 +168,9 @@ func NewSubmitSm(message, number string) *Unit {
 		F(ValidityPeriod, ""),
 		F(RegisteredDelivery, byte(RegisteredDeliv)),
 		F(ReplaceIfPresentFlag, 0),
-		F(DataCoding, byte(0x0)),
+		F(DataCoding, byte(e)),
 		F(SmDefaultMsgId, 0),
-		F(SmLength, byte(len([]byte(message)))),
-		F(ShortMessage, []byte(message)),
+		F(SmLength, byte(len(txt))),
+		F(ShortMessage, txt),
 	}, nil)
 }

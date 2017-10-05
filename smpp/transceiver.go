@@ -8,6 +8,7 @@ import (
 	"github.com/sbabiv/gsmpp/smpp/events"
 	"github.com/sbabiv/gsmpp/smpp/pdu/decoders"
 	"fmt"
+	"github.com/sbabiv/gsmpp/smpp/pdu/text"
 )
 
 
@@ -93,8 +94,8 @@ func (t *Transceiver) Close() error {
 	return nil
 }
 
-func (t *Transceiver) Submit(message, number string) (uint32, error) {
-	sm := pdu.NewSubmitSm(message, number)
+func (t *Transceiver) Submit(message, number, sourceAddr string, coding text.Coding) (uint32, error) {
+	sm := pdu.NewSubmitSm(message, number, sourceAddr, coding)
 	_, err := t.conn.Write(sm.Bytes())
 
 	return sm.Sequence, err
@@ -131,6 +132,10 @@ func (t *Transceiver) reader() {
 
 		case pdu.ENQUIRE_LINK_RESP:
 			t.ChannelState <- events.NewEvent(events.RECEIVE_ENQUITE_LINK_RESP)
+
+		case pdu.SUBMIT_SM_RESP:
+			t.ChannelState <- events.NewEvent(events.SUBMIT_SM_RESP)
+			//r := decoders.NewResp(h)
 
 		case pdu.UNBIND:
 			t.conn.Write(pdu.NewUnbindResp(h.Sequence).Bytes())
