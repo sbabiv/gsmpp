@@ -102,6 +102,15 @@ type Mask byte
 const (
 	//1011
 	EsmDeliv Mask = (2 << 2) | 3
+	EsmDelivUdh Mask = (2 << 2) | 3 | (1 << 6)
 	//11101
 	RegisteredDeliv Mask = (7 << 2) | 1
+)
+
+type Multipart byte
+
+const (
+	Payload Multipart = 0
+	UDH Multipart = 1
+	SAR Multipart = 2
 )

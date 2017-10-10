@@ -11,7 +11,6 @@ import (
 	"github.com/sbabiv/gsmpp/smpp/pdu/text"
 )
 
-
 type Transceiver struct {
 	host string
 	port int
@@ -94,11 +93,19 @@ func (t *Transceiver) Close() error {
 	return nil
 }
 
-func (t *Transceiver) Submit(message, number, sourceAddr string, coding text.Coding) (uint32, error) {
+func (t *Transceiver) Submit(message, number, sourceAddr string, coding text.Coding) ([]uint32, error) {
+	var seq []uint32
 	sm := pdu.NewSubmitSm(message, number, sourceAddr, coding)
-	_, err := t.conn.Write(sm.Bytes())
 
-	return sm.Sequence, err
+	for _, item := range sm {
+		_, err := t.conn.Write(item.Bytes())
+		if err != nil {
+			return seq, err
+		}
+		seq = append(seq, item.Sequence)
+	}
+
+	return seq, nil
 }
 
 func (t *Transceiver) reader() {

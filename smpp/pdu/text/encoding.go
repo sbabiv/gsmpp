@@ -10,7 +10,7 @@ type Coding byte
 
 const (
 	Alphabet Coding = 0
-	UCS2 			= 1 << 3
+	UCS2 Coding	= 1 << 3
 )
 
 func ucs2(s string) []byte {
