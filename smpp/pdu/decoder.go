@@ -21,7 +21,8 @@ func (f FieldNames) Decode(buffer *bytes.Buffer) Fields {
 			AddressRange,
 			DestinationAddr,
 			ScheduleDeliveryTime,
-			ValidityPeriod:
+			ValidityPeriod,
+			MessageId:
 
 			b, _ := buffer.ReadBytes(0x00)
 			result[i] = F(name, b)

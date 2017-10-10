@@ -4,10 +4,10 @@ import (
 	"time"
 	"strconv"
 	"net"
+	"fmt"
 	"github.com/sbabiv/gsmpp/smpp/pdu"
 	"github.com/sbabiv/gsmpp/smpp/events"
 	"github.com/sbabiv/gsmpp/smpp/pdu/decoders"
-	"fmt"
 	"github.com/sbabiv/gsmpp/smpp/pdu/text"
 )
 
@@ -142,7 +142,17 @@ func (t *Transceiver) reader() {
 
 		case pdu.SUBMIT_SM_RESP:
 			t.ChannelState <- events.NewEvent(events.SUBMIT_SM_RESP)
-			//r := decoders.NewResp(h)
+			r, err := decoders.DecodeSubmitSmResp(h, t.conn)
+			if err != nil {
+				t.conn.Close()
+				return
+			}
+
+			for _, f := range r.Fields {
+				if f.FieldName == pdu.MessageId {
+					fmt.Printf("SUBMIT_SM_RESP MessageId: %v", f.String())
+				}
+			}
 
 		case pdu.UNBIND:
 			t.conn.Write(pdu.NewUnbindResp(h.Sequence).Bytes())
@@ -163,7 +173,7 @@ func (t *Transceiver) reader() {
 			t.conn.Write(pdu.NewDeliverSmResp(h.Sequence).Bytes())
 
 			id := r.Optionals[pdu.ReceiptedMessageId].String()
-			state := r.Optionals[pdu.MessageState].String()
+			state := r.Optionals[pdu.MessageState].Byte()
 
 			fmt.Printf("deliv id: %v, state: %v", id, state)
 			/*

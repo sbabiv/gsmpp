@@ -42,15 +42,10 @@ type TLV struct {
 func (this *TLV) String() string {
 	return string(this.Value)
 }
-/*func (this *TLV) Byte() string {
-	return string(this.Value)
+
+func (this *TLV) Byte() byte {
+	return this.Value[0]
 }
-func (this *TLV) Short() string {
-	return string(this.Value)
-}
-func (this *TLV) Int() string {
-	return string(this.Value)
-}*/
 
 type Optionals map[TagName]*TLV
 
